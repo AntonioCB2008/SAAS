@@ -47,11 +47,28 @@ export const criarUsuario = async (req, res) => {
   try {
     const { nome, email, senha, telefone } = req.body;
 
+    console.log('Recebendo requisição de cadastro:', { nome, email, telefone, senha: senha ? '***' : 'não fornecida' });
+
     // Validações básicas
-    if (!nome || !email) {
-      return res.status(400).json({ error: 'Nome e email são obrigatórios' });
+    if (!nome || !email || !senha) {
+      console.log('Validação falhou: campos obrigatórios faltando', { nome: !!nome, email: !!email, senha: !!senha });
+      return res.status(400).json({ error: 'Nome, email e senha são obrigatórios' });
     }
 
+    // Validação de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('Validação falhou: email inválido', email);
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    // Validação de senha
+    if (senha.length < 6) {
+      console.log('Validação falhou: senha muito curta');
+      return res.status(400).json({ error: 'A senha deve ter pelo menos 6 caracteres' });
+    }
+
+    console.log('Tentando inserir usuário no Supabase...');
     const { data, error } = await supabase
       .from('usuario')
       .insert([
@@ -66,16 +83,26 @@ export const criarUsuario = async (req, res) => {
       .single();
 
     if (error) {
+      console.error('Erro do Supabase:', error);
       // Verificar se é erro de email duplicado
-      if (error.code === '23505') {
+      if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
         return res.status(409).json({ error: 'Email já cadastrado' });
       }
-      return res.status(400).json({ error: error.message });
+      return res.status(400).json({ 
+        error: 'Erro ao criar usuário', 
+        message: error.message,
+        code: error.code 
+      });
     }
 
+    console.log('Usuário criado com sucesso:', { id: data?.id, email: data?.email });
     return res.status(201).json(data);
   } catch (error) {
-    return res.status(500).json({ error: 'Erro ao criar usuário', message: error.message });
+    console.error('Erro inesperado ao criar usuário:', error);
+    return res.status(500).json({ 
+      error: 'Erro ao criar usuário', 
+      message: error.message 
+    });
   }
 };
 

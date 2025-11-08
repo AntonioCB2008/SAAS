@@ -64,6 +64,9 @@ function Cadastro() {
     try {
       const { confirmarSenha, ...dataToSend } = formData
       
+      console.log('Enviando dados para cadastro:', { ...dataToSend, senha: '***' })
+      console.log('URL da API:', api.defaults.baseURL)
+      
       const response = await api.post('/api/usuarios', {
         nome: dataToSend.nome,
         email: dataToSend.email,
@@ -71,6 +74,7 @@ function Cadastro() {
         telefone: dataToSend.telefone || null
       })
 
+      console.log('Resposta do servidor:', response.data)
       setSuccess('Cadastro realizado com sucesso! Redirecionando...')
       
       // Redirecionar para login após 2 segundos
@@ -78,7 +82,27 @@ function Cadastro() {
         navigate('/login')
       }, 2000)
     } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao realizar cadastro. Tente novamente.')
+      console.error('Erro ao realizar cadastro:', err)
+      console.error('Erro completo:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        request: err.request
+      })
+      
+      // Mensagens de erro mais específicas
+      if (err.response) {
+        // O servidor respondeu com um status de erro
+        const errorMessage = err.response.data?.error || err.response.data?.message
+        setError(errorMessage || `Erro ${err.response.status}: ${err.response.statusText}`)
+      } else if (err.request) {
+        // A requisição foi feita mas não houve resposta
+        setError('Não foi possível conectar ao servidor. Verifique se o backend está rodando.')
+      } else {
+        // Algo aconteceu ao configurar a requisição
+        setError('Erro ao realizar cadastro. Tente novamente.')
+      }
     } finally {
       setLoading(false)
     }

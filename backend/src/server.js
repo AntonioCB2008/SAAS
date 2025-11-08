@@ -8,8 +8,20 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Middleware para log de requisições (deve vir antes das rotas)
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
 // Middlewares
-app.use(cors());
+// Configurar CORS para permitir requisições do frontend
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*', // Em produção, defina a URL do frontend
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -28,7 +40,7 @@ app.use((req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Erro no servidor:', err.stack);
   res.status(500).json({ error: 'Erro interno do servidor', message: err.message });
 });
 

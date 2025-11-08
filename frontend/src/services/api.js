@@ -27,8 +27,11 @@ const getApiUrl = () => {
     // ═══════════════════════════════════════════════════════════
     // CONFIGURE AQUI A URL DO SEU BACKEND NO RENDER:
     // ═══════════════════════════════════════════════════════════
-    // Se o backend está em outro serviço no Render, descomente e configure:
-    const BACKEND_URL = '' // Exemplo: 'https://hotel-da-ia-backend.onrender.com'
+    // IMPORTANTE: Substitua pela URL REAL do seu backend no Render!
+    // Como encontrar: Render Dashboard → Seu serviço backend → Copiar a URL
+    // Exemplo: Se seu backend está em 'https://meu-backend-123.onrender.com'
+    //          Configure: const BACKEND_URL = 'https://meu-backend-123.onrender.com'
+    const BACKEND_URL = '' // COLE A URL DO SEU BACKEND AQUI (ex: 'https://meu-backend.onrender.com')
     // ═══════════════════════════════════════════════════════════
     
     if (BACKEND_URL) {

@@ -69,6 +69,21 @@ Após adicionar a variável `VITE_API_URL`, você precisa fazer um novo build:
 1. Vá em "Manual Deploy" → "Deploy latest commit"
 2. Ou faça um novo commit no GitHub (isso acionará um deploy automático)
 
+### 4. Configurar Redirects para React Router
+
+Para que o React Router funcione corretamente no Render:
+
+1. No Render Dashboard, vá no serviço do **frontend**
+2. Vá em "Settings" → "Redirects/Rewrites"
+3. Adicione a seguinte regra:
+   - **Source**: `/*`
+   - **Destination**: `/index.html`
+   - **Type**: `Rewrite`
+
+   Isso garante que todas as rotas sejam redirecionadas para `index.html`, permitindo que o React Router funcione.
+
+**OU** use o arquivo `_redirects` que já está no projeto (se o Render suportar).
+
 ---
 
 ## 🔍 Verificações e Troubleshooting
@@ -95,10 +110,18 @@ Após adicionar a variável `VITE_API_URL`, você precisa fazer um novo build:
 
 ### Erros Comuns
 
-#### Erro: "Não foi possível conectar ao servidor"
+#### Erro: "Não foi possível conectar ao servidor" ou "ERR_CONNECTION_REFUSED"
 - ✅ Verifique se o backend está rodando no Render
 - ✅ Verifique se a URL em `VITE_API_URL` está correta
 - ✅ Verifique se o backend não está em "sleep" (serviços gratuitos do Render entram em sleep após inatividade)
+- ✅ **Se aparecer `localhost:3000` no erro**: A variável `VITE_API_URL` não foi configurada ou o build foi feito antes de configurar
+  - Solução: Configure `VITE_API_URL` no Render e faça um novo deploy
+  - Ou configure `BACKEND_URL` diretamente no código (`frontend/src/services/api.js`)
+
+#### Erro: 404 Not Found na rota /login
+- ✅ Verifique se configurou os redirects no Render (veja seção 4 acima)
+- ✅ Verifique se o arquivo `_redirects` está sendo usado
+- ✅ Configure o "Redirects/Rewrites" no Render para redirecionar `/*` para `/index.html`
 
 #### Erro: "SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY devem estar definidos"
 - ✅ Verifique se as variáveis de ambiente estão configuradas no Render

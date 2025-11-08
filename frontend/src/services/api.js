@@ -1,27 +1,57 @@
 import axios from 'axios'
 
 // Determinar a URL da API baseado no ambiente
+// IMPORTANTE: Esta função é executada em runtime, não em build time
 const getApiUrl = () => {
-  // Se VITE_API_URL estiver definida, usa ela
+  // Prioridade 1: Variável global window.API_URL (pode ser definida no index.html ou por script)
+  if (window.API_URL) {
+    console.log('✅ Usando window.API_URL:', window.API_URL)
+    return window.API_URL
+  }
+  
+  // Prioridade 2: Variável de ambiente VITE_API_URL (definida em build time)
   if (import.meta.env.VITE_API_URL) {
+    console.log('✅ Usando VITE_API_URL:', import.meta.env.VITE_API_URL)
     return import.meta.env.VITE_API_URL
   }
   
-  // Em produção (Render), tenta usar a URL do backend
-  // Se você tiver um backend no Render, coloque a URL aqui
-  // Exemplo: https://seu-backend.onrender.com
-  if (import.meta.env.PROD) {
-    // Se não tiver VITE_API_URL definida em produção, retorna vazio para usar relativo
-    // ou você pode colocar a URL do seu backend no Render aqui
-    return '' // Usa URL relativa (mesmo domínio)
+  // Detecta se está em produção baseado na URL atual (runtime)
+  const hostname = window.location.hostname
+  const isLocalhost = hostname === 'localhost' || 
+                      hostname === '127.0.0.1' ||
+                      hostname.includes('localhost')
+  
+  if (!isLocalhost) {
+    // Em produção (não é localhost)
+    
+    // ═══════════════════════════════════════════════════════════
+    // CONFIGURE AQUI A URL DO SEU BACKEND NO RENDER:
+    // ═══════════════════════════════════════════════════════════
+    // Se o backend está em outro serviço no Render, descomente e configure:
+    const BACKEND_URL = '' // Exemplo: 'https://hotel-da-ia-backend.onrender.com'
+    // ═══════════════════════════════════════════════════════════
+    
+    if (BACKEND_URL) {
+      console.log('✅ Usando URL do backend configurada:', BACKEND_URL)
+      return BACKEND_URL
+    }
+    
+    // Se não configurou a URL, tenta usar URL relativa (mesmo domínio)
+    // Isso só funciona se o backend e frontend estão no mesmo serviço Render
+    console.warn('⚠️ BACKEND_URL não configurada no código')
+    console.warn('⚠️ Tentando usar URL relativa (mesmo domínio)')
+    console.warn('⚠️ Para usar backend em outro domínio, configure BACKEND_URL em frontend/src/services/api.js')
+    return '' // URL relativa
   }
   
-  // Em desenvolvimento, usa localhost
+  // Em desenvolvimento local, usa localhost
+  console.log('🔧 Modo desenvolvimento: usando localhost:3000')
   return 'http://localhost:3000'
 }
 
+const apiUrl = getApiUrl()
 const api = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: apiUrl,
   headers: {
     'Content-Type': 'application/json'
   },
@@ -29,14 +59,16 @@ const api = axios.create({
 })
 
 // Log da configuração da API
-const apiUrl = api.defaults.baseURL || window.location.origin
-console.log('🔗 API Base URL configurada:', apiUrl)
+const finalApiUrl = api.defaults.baseURL || window.location.origin
+console.log('🔗 API Base URL final:', finalApiUrl)
+console.log('🌐 Hostname atual:', window.location.hostname)
+console.log('🔧 Modo:', window.location.hostname === 'localhost' ? 'Desenvolvimento' : 'Produção')
 
-// Aviso se estiver em produção sem VITE_API_URL configurada
-if (import.meta.env.PROD && !import.meta.env.VITE_API_URL && api.defaults.baseURL === '') {
-  console.warn('⚠️ ATENÇÃO: VITE_API_URL não está configurada em produção!')
-  console.warn('⚠️ Configure a variável VITE_API_URL no Render com a URL do seu backend')
-  console.warn('⚠️ Exemplo: VITE_API_URL=https://seu-backend.onrender.com')
+// Aviso se estiver tentando usar localhost em produção
+if (window.location.hostname !== 'localhost' && api.defaults.baseURL === 'http://localhost:3000') {
+  console.error('❌ ERRO: Tentando usar localhost:3000 em produção!')
+  console.error('❌ Configure VITE_API_URL no Render e faça um novo build')
+  console.error('❌ Ou configure a URL do backend no código (frontend/src/services/api.js)')
 }
 
 // Interceptor para adicionar token de autenticação (quando implementar)

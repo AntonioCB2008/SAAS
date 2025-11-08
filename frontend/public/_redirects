@@ -1,0 +1,6 @@
+# Configuração de redirecionamento para React Router
+# Este arquivo é usado pelo Render e outros serviços de hospedagem estática
+# Redireciona todas as rotas para index.html para que o React Router funcione
+
+/*    /index.html   200
+
